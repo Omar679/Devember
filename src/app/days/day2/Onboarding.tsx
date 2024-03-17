@@ -10,7 +10,23 @@ import {
 import React, { useState } from "react";
 import { Stack, router } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
+import {
+  GestureDetector,
+  Directions,
+  Gesture,
+} from "react-native-gesture-handler";
 
+import Animated, {
+  FadeIn,
+  FadeOut,
+  BounceInLeft,
+  BounceOutRight,
+  BounceInRight,
+  SlideInLeft,
+  SlideOutRight,
+  SlideInRight,
+  SlideOutLeft,
+} from "react-native-reanimated";
 
 const OnboardingSteps = [
   {
@@ -27,7 +43,7 @@ const OnboardingSteps = [
   {
     title: "Education for children",
     description: "Contribute to the children to help the organization",
-    icon: "people-arrows",
+    icon: "book-reader",
   },
 ];
 
@@ -45,6 +61,21 @@ const Onboarding = () => {
     setScreenIndex(0);
     router.back();
   };
+  const onBack = () => {
+    const firstScreen = screenIndex == 0;
+    if (firstScreen) {
+      endOnboarding();
+    } else {
+      setScreenIndex(screenIndex - 1);
+    }
+  };
+
+  const swipeNext = Gesture.Fling()
+    .direction(Directions.LEFT)
+    .onEnd(onContinue);
+  const swipePrev = Gesture.Fling().direction(Directions.RIGHT).onEnd(onBack);
+  const swipes = Gesture.Simultaneous(swipeNext, swipePrev);
+
   return (
     <SafeAreaView
       style={[
@@ -64,24 +95,36 @@ const Onboarding = () => {
           />
         ))}
       </View>
-      <View style={styles.pageContent}>
-        <FontAwesome5
-          style={styles.image}
-          name={data.icon}
-          size={100}
-          color="#cef202"
-        />
-        <View style={styles.footer}>
-          <Text style={styles.title}>{data.title}</Text>
-          <Text style={styles.subtitle}>{data.description}</Text>
-          <View style={styles.buttonsRow}>
-            <Text style={styles.buttonText}>Skip</Text>
-            <Pressable style={styles.button} onPress={onContinue}>
-              <Text style={styles.buttonText}>Continue</Text>
-            </Pressable>
+      <GestureDetector gesture={swipes}>
+        <Animated.View
+          style={styles.pageContent}
+          entering={FadeIn}
+          key={screenIndex}
+        >
+          <Animated.View entering={FadeIn} exiting={FadeOut}>
+            <FontAwesome5
+              style={styles.image}
+              name={data.icon}
+              size={150}
+              color="#cef202"
+            />
+          </Animated.View>
+          <View style={styles.footer}>
+            <Animated.Text entering={SlideInRight } exiting={SlideOutLeft.delay(150) } style={styles.title}>
+              {data.title}
+            </Animated.Text>
+            <Animated.Text entering={SlideInRight} exiting={SlideOutLeft.delay(150)} style={styles.subtitle}>
+              {data.description}
+            </Animated.Text>
+            <View style={styles.buttonsRow}>
+              <Text style={styles.buttonText}>Skip</Text>
+              <Pressable style={styles.button} onPress={onContinue}>
+                <Text style={styles.buttonText}>Continue</Text>
+              </Pressable>
+            </View>
           </View>
-        </View>
-      </View>
+        </Animated.View>
+      </GestureDetector>
     </SafeAreaView>
   );
 };
@@ -100,7 +143,7 @@ const styles = StyleSheet.create({
     color: "#fdfdfd",
     fontSize: 50,
     fontWeight: "bold",
-    fontFamily: "whisper",
+    fontFamily: "regularItalic",
     letterSpacing: 1.3,
     marginVertical: 10,
   },
